@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="마스터 스튜디오">
+  <meta name="apple-mobile-web-app-title" content="파메스테틱 스튜디오">
   <title>파메스테틱 스튜디오</title>
   <style>
     body { margin:0; background:#070B14; color:#F8FAFC; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; }
@@ -21,19 +21,26 @@
   <div class="sub">영구 고정 주소에서 암호화 터널로 이동합니다</div>
   <script>
     (async function() {
-      try {
-        const r = await fetch("./target.json?_t=" + Date.now(), { cache: "no-store" });
-        const d = await r.json();
-        const target = d && d.url;
-        if (target) {
-          let subPath = window.location.pathname
-            .replace(/^\/portal(\/index\.html)?/, "")
-            .replace(/^\/index\.html$/, "");
-          if (!subPath.startsWith("/")) subPath = "/" + subPath;
-          window.location.replace(target.replace(/\/$/, "") + subPath + window.location.search + window.location.hash);
-          return;
-        }
-      } catch (e) {}
+      const sources = [
+        "https://raw.githubusercontent.com/heesunparklove/portal/main/target.json?_t=" + Date.now(),
+        "/portal/target.json?_t=" + Date.now()
+      ];
+      for (const src of sources) {
+        try {
+          const r = await fetch(src, { cache: "no-store" });
+          if (!r.ok) continue;
+          const d = await r.json();
+          const target = d && d.url;
+          if (target) {
+            let subPath = window.location.pathname
+              .replace(/^\/portal(\/index\.html)?/, "")
+              .replace(/^\/index\.html$/, "");
+            if (!subPath.startsWith("/")) subPath = "/" + subPath;
+            window.location.replace(target.replace(/\/$/, "") + subPath + window.location.search + window.location.hash);
+            return;
+          }
+        } catch (e) {}
+      }
       document.querySelector(".title").textContent = "⚠️ 연결 정보를 불러오지 못했습니다";
       document.querySelector(".sub").textContent = "잠시 후 다시 새로고침해 주세요";
     })();
