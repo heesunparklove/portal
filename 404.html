@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="파메스테틱 스튜디오">
-  <title>파메스테틱 스튜디오</title>
+  <meta name="apple-mobile-web-app-title" content="뭘해도예뻐 AI">
+  <title>뭘해도예뻐 AI 스튜디오</title>
   <style>
     body { margin:0; background:#070B14; color:#F8FAFC; font-family:-apple-system,BlinkMacSystemFont,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; }
     .spinner { width:38px; height:38px; border:3.5px solid rgba(56,189,248,0.2); border-top-color:#38BDF8; border-radius:50%; animation:spin 0.7s linear infinite; margin-bottom:14px; }
@@ -18,9 +18,36 @@
 <body>
   <div class="spinner"></div>
   <div class="title">🚀 파메스테틱 스튜디오 보안 연결 중...</div>
-  <div class="sub">영구 고정 주소에서 암호화 터널로 이동합니다</div>
+  <div class="sub">영구 고정 주소에서 암호화 터널로 자동 이동합니다</div>
   <script>
     (async function() {
+      let subPath = window.location.pathname
+        .replace(/^\/portal(\/index\.html)?/, "")
+        .replace(/\/index\.html$/, "");
+      if (!subPath.startsWith("/")) subPath = "/" + subPath;
+
+      const params = new URLSearchParams(window.location.search);
+      const qId = (params.get("id") || params.get("owner") || "").trim();
+      if (params.get("logout") === "1") {
+        try { localStorage.removeItem("pharm_portal_saved_director_id"); } catch (e) {}
+      } else if (qId) {
+        try { localStorage.setItem("pharm_portal_saved_director_id", qId); } catch (e) {}
+      } else {
+        const m = subPath.match(/^\/director\/([^\/?#]+)/);
+        if (m && m[1] && m[1].toLowerCase() !== "signup") {
+          try { localStorage.setItem("pharm_portal_saved_director_id", decodeURIComponent(m[1])); } catch (e) {}
+        }
+      }
+
+      if ((subPath === "/director" || subPath === "/director/") && !qId && params.get("logout") !== "1") {
+        try {
+          const savedId = (localStorage.getItem("pharm_portal_saved_director_id") || "").trim();
+          if (savedId) {
+            subPath = "/director/" + encodeURIComponent(savedId);
+          }
+        } catch (e) {}
+      }
+
       const sources = [
         "https://raw.githubusercontent.com/heesunparklove/portal/main/target.json?_t=" + Date.now(),
         "/portal/target.json?_t=" + Date.now()
@@ -32,10 +59,6 @@
           const d = await r.json();
           const target = d && d.url;
           if (target) {
-            let subPath = window.location.pathname
-              .replace(/^\/portal(\/index\.html)?/, "")
-              .replace(/^\/index\.html$/, "");
-            if (!subPath.startsWith("/")) subPath = "/" + subPath;
             window.location.replace(target.replace(/\/$/, "") + subPath + window.location.search + window.location.hash);
             return;
           }
